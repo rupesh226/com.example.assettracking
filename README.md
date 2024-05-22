@@ -36,13 +36,9 @@ We are also using caching to improve performance.
 
 ### Running DynamoDB Locally
 
-1. Pull the DynamoDB local image:
+1. Run DynamoDB local with default dataset:
    ```sh
-   docker pull amazon/dynamodb-local
-   ```
-2. Run DynamoDB local:
-   ```sh
-   docker run -d -p 8000:8000 amazon/dynamodb-local
+   dynamodb_local_latest/start.sh
    ```
 
 ### Running Redis Locally
@@ -71,6 +67,8 @@ We are also using caching to improve performance.
    mvn clean install
    ```
 
+   ![Swagger-UI](https://github.com/rupesh226/com.example.assettracking/blob/main/img/MVN-build.png)
+
 3. Run the application:
 
    ```sh
@@ -78,6 +76,8 @@ We are also using caching to improve performance.
    ```
 
 4. Access Apps from - http://localhost:8080/swagger-ui/index.html
+
+![Swagger-UI](https://github.com/rupesh226/com.example.assettracking/blob/main/img/Home-Page.png)
 
 ## API Endpoints
 
@@ -171,6 +171,8 @@ Unit tests are written using JUnit and Mockito. To run the tests:
 ```sh
 mvn test
 ```
+
+![Swagger-UI](https://github.com/rupesh226/com.example.assettracking/blob/main/img/Test-Results.png)
 
 ## Future Enhancements
 

@@ -38,194 +38,201 @@ import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
 
 public class DataToDynamoDB {
 
-	Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-	
-	private static final String TABLE_NAME = "AssetEvents";
-	private static final String FILE_PATH = "/Users/rupesh/Documents/workspace-spring-tool-suite/com.example.assettracking.data.ingestion/src/main/resources/data.json";
-	private static final ObjectMapper objectMapper = new ObjectMapper();
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
+        Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
-	private static final String partitionKeyName = "id";
-	private static final String sortKeyName = "createdAt";
+        private static final String TABLE_NAME = "AssetEvents";
+        private static final String FILE_PATH = "./data.json";
+        private static final ObjectMapper objectMapper = new ObjectMapper();
+        private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
 
-	// Secondary index attributes
-	String gsiAssetPartitionKey = "asset";
-    String gsiTripSortKey = "trip";
-    //String gsiTripSortKey = "trip";
+        private static final String partitionKeyName = "id";
+        private static final String sortKeyName = "createdAt";
 
-	DynamoDbClient ddb;
+        // Secondary index attributes
+        String gsiAssetPartitionKey = "asset";
+        String gsiTripSortKey = "trip";
+        // String gsiTripSortKey = "trip";
 
-	public DataToDynamoDB() {
-		root.setLevel(Level.ERROR);
-		
-		ddb = DynamoDbClient.builder().endpointOverride(URI.create("http://localhost:8000")).region(Region.US_EAST_1)
-				.credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(
-						"wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-						"IQoJb3JpZ2luX2IQoJb3JpZ2luX2IQoJb3JpZ2luX2IQoJb3JpZ2luX2IQoJb3JpZVERYLONGSTRINGEXAMPLE")))
-				.build();
-	}
+        DynamoDbClient ddb;
 
-	public static void main(String[] args) {
+        public DataToDynamoDB() {
+                root.setLevel(Level.ERROR);
 
-		DataToDynamoDB dataToDynamoDB = new DataToDynamoDB();
+                ddb = DynamoDbClient.builder().endpointOverride(URI.create("http://localhost:8000"))
+                                .region(Region.US_EAST_1)
+                                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(
+                                                "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+                                                "IQoJb3JpZ2luX2IQoJb3JpZ2luX2IQoJb3JpZ2luX2IQoJb3JpZ2luX2IQoJb3JpZVERYLONGSTRINGEXAMPLE")))
+                                .build();
+        }
 
-		try {
-			dataToDynamoDB.deleteTable();
-		} catch (DynamoDbException e) {
-			System.err.println("Unable to delete table: " + e.getMessage());
-		}
+        public static void main(String[] args) {
 
-		try {
-			dataToDynamoDB.createTable();
-		} catch (DynamoDbException e) {
-			System.err.println("Unable to create table: " + e.getMessage());
-		}
+                DataToDynamoDB dataToDynamoDB = new DataToDynamoDB();
 
-		try {
-			dataToDynamoDB.insertdata();
-		} catch (DynamoDbException e) {
-			System.err.println("Unable to insert data into table: " + e.getMessage());
-		}
-	}
+                try {
+                        dataToDynamoDB.deleteTable();
+                } catch (DynamoDbException e) {
+                        System.err.println("Unable to delete table: " + e.getMessage());
+                }
 
-	void insertdata() {
+                try {
+                        dataToDynamoDB.createTable();
+                } catch (DynamoDbException e) {
+                        System.err.println("Unable to create table: " + e.getMessage());
+                }
 
-		try (BufferedReader reader = new BufferedReader(new FileReader(new File(FILE_PATH)))) {
-			String line;
-			while ((line = reader.readLine()) != null) {
-				@SuppressWarnings("unchecked")
-				Map<String, Object> item = objectMapper.readValue(line, Map.class);
-				Map<String, AttributeValue> itemValues = new HashMap<>();
+                try {
+                        dataToDynamoDB.insertdata();
+                } catch (DynamoDbException e) {
+                        System.err.println("Unable to insert data into table: " + e.getMessage());
+                }
+        }
 
-				itemValues.put("id", AttributeValue.builder().s(UUID.randomUUID().toString()).build());
-				itemValues.put("asset", AttributeValue.builder().n(String.valueOf(item.get("asset"))).build());
-				itemValues.put("trip", AttributeValue.builder().n(String.valueOf(item.get("trip"))).build());
-				itemValues.put("x", AttributeValue.builder().n(String.valueOf(item.get("x"))).build());
-				itemValues.put("y", AttributeValue.builder().n(String.valueOf(item.get("y"))).build());
-				itemValues.put("speed", AttributeValue.builder().n(String.valueOf(item.get("speed"))).build());
-				itemValues.put("createdAtISO",
-						AttributeValue.builder().s(String.valueOf(item.get("createdAt"))).build());
-				itemValues.put("createdAt", AttributeValue.builder()
-						.n(toUnixTimeMillis(String.valueOf(item.get("createdAt"))) + "").build());
+        void insertdata() {
 
-				PutItemRequest request = PutItemRequest.builder().tableName(TABLE_NAME).item(itemValues).build();
-				ddb.putItem(request);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			ddb.close();
-		}
-	}
+                try (BufferedReader reader = new BufferedReader(new FileReader(new File(FILE_PATH)))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                                @SuppressWarnings("unchecked")
+                                Map<String, Object> item = objectMapper.readValue(line, Map.class);
+                                Map<String, AttributeValue> itemValues = new HashMap<>();
 
-	void deleteTable() {
+                                itemValues.put("id", AttributeValue.builder().s(UUID.randomUUID().toString()).build());
+                                itemValues.put("asset",
+                                                AttributeValue.builder().n(String.valueOf(item.get("asset"))).build());
+                                itemValues.put("trip",
+                                                AttributeValue.builder().n(String.valueOf(item.get("trip"))).build());
+                                itemValues.put("x", AttributeValue.builder().n(String.valueOf(item.get("x"))).build());
+                                itemValues.put("y", AttributeValue.builder().n(String.valueOf(item.get("y"))).build());
+                                itemValues.put("speed",
+                                                AttributeValue.builder().n(String.valueOf(item.get("speed"))).build());
+                                itemValues.put("createdAtISO",
+                                                AttributeValue.builder().s(String.valueOf(item.get("createdAt")))
+                                                                .build());
+                                itemValues.put("createdAt", AttributeValue.builder()
+                                                .n(toUnixTimeMillis(String.valueOf(item.get("createdAt"))) + "")
+                                                .build());
 
-		DeleteTableRequest request = DeleteTableRequest.builder().tableName(TABLE_NAME).build();
+                                PutItemRequest request = PutItemRequest.builder().tableName(TABLE_NAME).item(itemValues)
+                                                .build();
+                                ddb.putItem(request);
+                        }
+                } catch (IOException e) {
+                        e.printStackTrace();
+                } finally {
+                        ddb.close();
+                }
+        }
 
-		ddb.deleteTable(request);
-		System.out.println("Table " + TABLE_NAME + " deleted successfully.");
+        void deleteTable() {
 
-	}
+                DeleteTableRequest request = DeleteTableRequest.builder().tableName(TABLE_NAME).build();
 
-	void createTable() {
+                ddb.deleteTable(request);
+                System.out.println("Table " + TABLE_NAME + " deleted successfully.");
 
-		CreateTableRequest request = CreateTableRequest.builder()
-                .attributeDefinitions(
-                        AttributeDefinition.builder()
-                                .attributeName(partitionKeyName)
-                                .attributeType(ScalarAttributeType.S)
-                                .build(),
-                        AttributeDefinition.builder()
-                                .attributeName(sortKeyName)
-                                .attributeType(ScalarAttributeType.N)
-                                .build(),
-                        AttributeDefinition.builder()
-                                .attributeName(gsiAssetPartitionKey)
-                                .attributeType(ScalarAttributeType.N)
-                                .build(),
-                        AttributeDefinition.builder()
-                                .attributeName(gsiTripSortKey)
-                                .attributeType(ScalarAttributeType.N)
-                                .build())
-                .keySchema(
-                        KeySchemaElement.builder()
-                                .attributeName(partitionKeyName)
-                                .keyType(KeyType.HASH)
-                                .build(),
-                        KeySchemaElement.builder()
-                                .attributeName(sortKeyName)
-                                .keyType(KeyType.RANGE)
-                                .build())
-                .provisionedThroughput(ProvisionedThroughput.builder()
-                        .readCapacityUnits(10L)
-                        .writeCapacityUnits(10L)
-                        .build())
-                .globalSecondaryIndexes(
-                        GlobalSecondaryIndex.builder()
-                                .indexName("AssetTripIndex")
+        }
+
+        void createTable() {
+
+                CreateTableRequest request = CreateTableRequest.builder()
+                                .attributeDefinitions(
+                                                AttributeDefinition.builder()
+                                                                .attributeName(partitionKeyName)
+                                                                .attributeType(ScalarAttributeType.S)
+                                                                .build(),
+                                                AttributeDefinition.builder()
+                                                                .attributeName(sortKeyName)
+                                                                .attributeType(ScalarAttributeType.N)
+                                                                .build(),
+                                                AttributeDefinition.builder()
+                                                                .attributeName(gsiAssetPartitionKey)
+                                                                .attributeType(ScalarAttributeType.N)
+                                                                .build(),
+                                                AttributeDefinition.builder()
+                                                                .attributeName(gsiTripSortKey)
+                                                                .attributeType(ScalarAttributeType.N)
+                                                                .build())
                                 .keySchema(
-                                        KeySchemaElement.builder()
-                                                .attributeName(gsiAssetPartitionKey)
-                                                .keyType(KeyType.HASH)
-                                                .build(),
-                                        KeySchemaElement.builder()
-                                                .attributeName(gsiTripSortKey)
-                                                .keyType(KeyType.RANGE)
-                                                .build())
-                                .projection(Projection.builder()
-                                        .projectionType(ProjectionType.ALL)
-                                        .build())
+                                                KeySchemaElement.builder()
+                                                                .attributeName(partitionKeyName)
+                                                                .keyType(KeyType.HASH)
+                                                                .build(),
+                                                KeySchemaElement.builder()
+                                                                .attributeName(sortKeyName)
+                                                                .keyType(KeyType.RANGE)
+                                                                .build())
                                 .provisionedThroughput(ProvisionedThroughput.builder()
-                                        .readCapacityUnits(10L)
-                                        .writeCapacityUnits(10L)
-                                        .build())
-                                .build(),
-                        GlobalSecondaryIndex.builder()
-                                .indexName("AssetIndex")
-                                .keySchema(
-                                        KeySchemaElement.builder()
-                                                .attributeName(partitionKeyName)
-                                                .keyType(KeyType.HASH)
+                                                .readCapacityUnits(10L)
+                                                .writeCapacityUnits(10L)
                                                 .build())
-                                .projection(Projection.builder()
-                                        .projectionType(ProjectionType.ALL)
-                                        .build())
-                                .provisionedThroughput(ProvisionedThroughput.builder()
-                                        .readCapacityUnits(10L)
-                                        .writeCapacityUnits(10L)
-                                        .build())
-                                .build())
-                .localSecondaryIndexes(
-                        LocalSecondaryIndex.builder()
-                                .indexName("CreatedAtTripIndex")
-                                .keySchema(
-                                        KeySchemaElement.builder()
-                                                .attributeName(partitionKeyName)
-                                                .keyType(KeyType.HASH)
-                                                .build(),
-                                        KeySchemaElement.builder()
-                                                .attributeName(gsiTripSortKey)
-                                                .keyType(KeyType.RANGE)
-                                                .build())
-                                .projection(Projection.builder()
-                                        .projectionType(ProjectionType.ALL)
-                                        .build())
-                                .build())
-                .tableName(TABLE_NAME)
-                .build();
-		ddb.createTable(request);
-		System.out.println("Table created successfully.");
+                                .globalSecondaryIndexes(
+                                                GlobalSecondaryIndex.builder()
+                                                                .indexName("AssetTripIndex")
+                                                                .keySchema(
+                                                                                KeySchemaElement.builder()
+                                                                                                .attributeName(gsiAssetPartitionKey)
+                                                                                                .keyType(KeyType.HASH)
+                                                                                                .build(),
+                                                                                KeySchemaElement.builder()
+                                                                                                .attributeName(gsiTripSortKey)
+                                                                                                .keyType(KeyType.RANGE)
+                                                                                                .build())
+                                                                .projection(Projection.builder()
+                                                                                .projectionType(ProjectionType.ALL)
+                                                                                .build())
+                                                                .provisionedThroughput(ProvisionedThroughput.builder()
+                                                                                .readCapacityUnits(10L)
+                                                                                .writeCapacityUnits(10L)
+                                                                                .build())
+                                                                .build(),
+                                                GlobalSecondaryIndex.builder()
+                                                                .indexName("AssetIndex")
+                                                                .keySchema(
+                                                                                KeySchemaElement.builder()
+                                                                                                .attributeName(partitionKeyName)
+                                                                                                .keyType(KeyType.HASH)
+                                                                                                .build())
+                                                                .projection(Projection.builder()
+                                                                                .projectionType(ProjectionType.ALL)
+                                                                                .build())
+                                                                .provisionedThroughput(ProvisionedThroughput.builder()
+                                                                                .readCapacityUnits(10L)
+                                                                                .writeCapacityUnits(10L)
+                                                                                .build())
+                                                                .build())
+                                .localSecondaryIndexes(
+                                                LocalSecondaryIndex.builder()
+                                                                .indexName("CreatedAtTripIndex")
+                                                                .keySchema(
+                                                                                KeySchemaElement.builder()
+                                                                                                .attributeName(partitionKeyName)
+                                                                                                .keyType(KeyType.HASH)
+                                                                                                .build(),
+                                                                                KeySchemaElement.builder()
+                                                                                                .attributeName(gsiTripSortKey)
+                                                                                                .keyType(KeyType.RANGE)
+                                                                                                .build())
+                                                                .projection(Projection.builder()
+                                                                                .projectionType(ProjectionType.ALL)
+                                                                                .build())
+                                                                .build())
+                                .tableName(TABLE_NAME)
+                                .build();
+                ddb.createTable(request);
+                System.out.println("Table created successfully.");
 
-	}
+        }
 
-	private static long toUnixTimeMillis(String dateTimeString) {
-		ZonedDateTime zdt = ZonedDateTime.parse(dateTimeString, DATE_TIME_FORMATTER);
-		return zdt.toInstant().toEpochMilli();
-	}
+        private static long toUnixTimeMillis(String dateTimeString) {
+                ZonedDateTime zdt = ZonedDateTime.parse(dateTimeString, DATE_TIME_FORMATTER);
+                return zdt.toInstant().toEpochMilli();
+        }
 
-	@Override
-	protected void finalize() throws Throwable {
-		// TODO Auto-generated method stub
-		ddb.close();
-	}
+        @Override
+        protected void finalize() throws Throwable {
+                // TODO Auto-generated method stub
+                ddb.close();
+        }
 }
