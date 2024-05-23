@@ -28,6 +28,12 @@ We are also using caching to improve performance.
 
 ## Setup Instructions
 
+### Setup Video (With Docker Compose)
+
+[![Watch the video](https://github.com/rupesh226/assettracking-app/blob/main/img/gHrep.png)](https://www.youtube.com/watch?v=s_TeDU3cSKw)
+
+https://github.com/rupesh226/assettracking-app
+
 ### Prerequisites
 
 - Java 17
