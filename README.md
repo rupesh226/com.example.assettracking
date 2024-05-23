@@ -38,7 +38,8 @@ We are also using caching to improve performance.
 
 1. Run DynamoDB local with default dataset:
    ```sh
-   dynamodb_local_latest/start.sh
+   cd dynamodb_local_latest
+   sh start.sh
    ```
 
 ### Running Redis Locally
